@@ -11,7 +11,7 @@ import { logger } from "./utils/logger";
 dotenv.config();
 
 const app = express();
-const port = 5001;
+const port = 5002;
 
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
