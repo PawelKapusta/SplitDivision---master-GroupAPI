@@ -5,7 +5,7 @@ import morgan from "morgan";
 import helmet from "helmet";
 import * as dotenv from "dotenv";
 import { sequelize } from "./database/config";
-//import groupRouter from "./routers/groupRouter";
+import groupRouter from "./routers/groupRouter";
 import { logger } from "./utils/logger";
 
 dotenv.config();
@@ -31,14 +31,12 @@ app.get("/", (req, res) => {
   res.send("Hello World! from Group API");
 });
 
-// //users
-// app.get("/api/v1/users", userRouter);
-// app.get("/api/v1/users/:id", userRouter);
-// app.post("/api/v1/users/register", userRouter);
-// app.post("/api/v1/users/login", userRouter);
-// app.put("/api/v1/users/:id", userRouter);
-// app.put("/api/v1/users/profile/:id", userRouter);
-// app.delete("/api/v1/users/:id", userRouter);
+//groups
+app.get("/api/v1/groups", groupRouter);
+app.get("/api/v1/groups/:id", groupRouter);
+app.post("/api/v1/groups", groupRouter);
+app.put("/api/v1/groups/:id", groupRouter);
+app.delete("/api/v1/groups/:id", groupRouter);
 
 app.listen(port, () => {
   console.log("Starting running GroupAPI app...");

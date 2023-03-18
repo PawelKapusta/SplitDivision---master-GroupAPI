@@ -1,9 +1,7 @@
 import express from "express";
 import { Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
-import { Op } from "sequelize";
 import Group from "../models/groupModel";
-import User from "../models/userModel";
 import { logger } from "../utils/logger";
 import { GroupAttributes, ErrorType } from "../constants/constants";
 
@@ -53,10 +51,10 @@ router.get(
 router.post(
   "/api/v1/groups",
   async (
-    req: Request<{ id: string }, {}, Partial<GroupAttributes>>,
+    req: Request<{ id: string }, {}, Omit<GroupAttributes, "id">>,
     res: Response<GroupAttributes | ErrorType>,
   ) => {
-    const { name, description, data_created } = req.body;
+    const { name, description, data_created }: Omit<GroupAttributes, "id"> = req.body;
 
     try {
       const newGroup: GroupAttributes = await Group.create({
@@ -76,54 +74,63 @@ router.post(
   },
 );
 
-router.put("/api/v1/groups/:id", async (req, res) => {
-  const groupId = req.params.id;
-  const { name, description } = req.body;
-
-  try {
-    const group = await Group.findOne({ where: { id: groupId } });
-    if (!group) {
-      return res.status(404).json({ message: "This group not exists in the system" });
-    }
-
-    const updatedData = {
-      name,
-      description,
-    };
-
-    const dataToUpdate = Object.keys(updatedData).filter(key => updatedData[key] !== undefined);
-
-    dataToUpdate.forEach(key => (group[key] = updatedData[key]));
-
-    await group.save();
-
-    return res.status(200).json(group);
-  } catch (error) {
-    logger.error(error.stack);
-    logger.error(error.message);
-    logger.error(error.errors[0].message);
-    return res.status(500).json({ error: error.errors[0].message });
-  }
-});
-
-router.delete("/api/v1/groups/:id", async (req, res) => {
-  try {
+router.put(
+  "/api/v1/groups/:id",
+  async (
+    req: Request<{ id: string }, {}, Omit<GroupAttributes, "id" | "data_created">>,
+    res: Response<GroupAttributes | ErrorType>,
+  ) => {
     const groupId: string = req.params.id;
+    const { name, description }: Omit<GroupAttributes, "id" | "data_created"> = req.body;
 
-    const deletedGroup = await Group.destroy({ where: { id: groupId } });
+    try {
+      const group = await Group.findOne({ where: { id: groupId } });
+      if (!group) {
+        return res.status(404).send("This group not exists in the system");
+      }
 
-    if (!deletedGroup) {
-      return res.status(404).json({ message: "Group with this id not exists in the system" });
+      const updatedData: Omit<GroupAttributes, "id" | "data_created"> = {
+        name,
+        description,
+      };
+
+      const dataToUpdate = Object.keys(updatedData).filter(key => updatedData[key] !== undefined);
+
+      dataToUpdate.forEach(key => (group[key] = updatedData[key]));
+
+      await group.save();
+
+      return res.status(200).json(group);
+    } catch (error) {
+      logger.error(error.stack);
+      logger.error(error.message);
+      logger.error(error.errors[0].message);
+      return res.status(500).json({ error: error.errors[0].message });
     }
+  },
+);
 
-    return res.status(200).json({ message: "Group successfully deleted from the system!" });
-  } catch (error) {
-    console.error(error);
-    logger.error(error.stack);
-    logger.error(error.message);
-    logger.error(error.errors[0].message);
-    return res.status(500).json({ error: error.errors[0].message });
-  }
-});
+router.delete(
+  "/api/v1/groups/:id",
+  async (req: Request<{ id: string }, {}, {}>, res: Response<string | ErrorType>) => {
+    try {
+      const groupId: string = req.params.id;
+
+      const deletedGroup = await Group.destroy({ where: { id: groupId } });
+
+      if (!deletedGroup) {
+        return res.status(404).send("Group with this id not exists in the system");
+      }
+
+      return res.status(200).send("Group successfully deleted from the system!");
+    } catch (error) {
+      console.error(error);
+      logger.error(error.stack);
+      logger.error(error.message);
+      logger.error(error.errors[0].message);
+      return res.status(500).json({ error: error.errors[0].message });
+    }
+  },
+);
 
 export default router;
