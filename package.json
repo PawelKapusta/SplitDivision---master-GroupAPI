@@ -2,7 +2,7 @@
   "name": "groupapi",
   "version": "1.0.0",
   "description": "API for GROUP in Master project",
-  "main": "index.ts",
+  "main": "src/index.ts",
   "scripts": {
     "test": "npm test",
     "start": "tsc && nodemon dist/index.js",
