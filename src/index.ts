@@ -6,7 +6,7 @@ import helmet from "helmet";
 import * as dotenv from "dotenv";
 import { sequelize } from "./database/config";
 import groupRouter from "./routers/groupRouter";
-import { logger } from "./utils/logger";
+import { consoleLogger } from "./utils/logger";
 
 dotenv.config();
 
@@ -21,10 +21,10 @@ app.use(helmet());
 
 sequelize
   .authenticate()
-  .then(() => console.log("Database connected successfully"))
+  .then(() => consoleLogger.info("Database connected successfully"))
   .catch(error => {
-    console.log("Error when connecting to database...: " + error);
-    logger.error(error.stack);
+    consoleLogger.info("Error when connecting to database...: " + error);
+    consoleLogger.error(error.stack);
   });
 
 app.get("/", (req, res) => {
@@ -39,6 +39,6 @@ app.put("/api/v1/groups/:id", groupRouter);
 app.delete("/api/v1/groups/:id", groupRouter);
 
 app.listen(port, () => {
-  console.log("Starting running GroupAPI app...");
-  console.log(`App listening on port ${port}!`);
+  consoleLogger.info("Starting running GroupAPI app...");
+  consoleLogger.info(`App listening on port ${port}!`);
 });

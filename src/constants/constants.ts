@@ -21,4 +21,11 @@ export interface GroupAttributes {
   data_created: Date;
 }
 
+export interface UpdateGroupRequest {
+  params: {
+    id: string;
+  };
+  body: Partial<GroupAttributes>;
+}
+
 export type ErrorType = string | { error: string };
