@@ -21,6 +21,20 @@ export interface GroupAttributes {
   data_created: Date;
 }
 
+export interface GroupsUsersAttributes {
+  id: string;
+  group_id: string;
+  user_id: string;
+}
+
+export interface GroupPostPayload {
+  id: string;
+  name: string;
+  description: string;
+  data_created: Date;
+  usersIdList: string[]
+}
+
 export interface UpdateGroupRequest {
   params: {
     id: string;

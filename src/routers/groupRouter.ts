@@ -3,7 +3,8 @@ import { Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import Group from "../models/groupModel";
 import { logger } from "../utils/logger";
-import { GroupAttributes, ErrorType, UpdateGroupRequest } from "../constants/constants";
+import {GroupAttributes, ErrorType, UpdateGroupRequest, GroupPostPayload} from "../constants/constants";
+import GroupsUsers from "../models/groupsUsersModel";
 
 const router = express.Router();
 
@@ -48,15 +49,31 @@ router.get(
 router.post(
   "/api/v1/groups",
   async (req: Request<Omit<GroupAttributes, "id">>, res: Response<GroupAttributes | ErrorType>) => {
-    const { name, description, data_created }: Omit<GroupAttributes, "id"> = req.body;
+    const { name, description, data_created, usersIdList }: Omit<GroupPostPayload, "id"> = req.body;
 
     try {
-      const newGroup: GroupAttributes = await Group.create({
-        id: uuidv4(),
+      const id = uuidv4();
+      const newGroup:GroupAttributes = await Group.create({
+        id,
         name,
         description,
         data_created,
       });
+
+        for (const userId of usersIdList) {
+            console.log("Here adding groups users");
+            try {
+                await GroupsUsers.create({
+                    id: uuidv4(),
+                    group_id: id,
+                    user_id: userId
+                })
+                logger.info(`Successfully added user: ${userId} to group in database`);
+            } catch (error) {
+                logger.error(error.message);
+                return res.status(500).json({ error: error.message });
+            }
+        }
 
       return res.status(201).json(newGroup);
     } catch (error) {
