@@ -5,6 +5,7 @@ import Group from "../models/groupModel";
 import { logger } from "../utils/logger";
 import {GroupAttributes, ErrorType, UpdateGroupRequest, GroupPostPayload} from "../constants/constants";
 import GroupsUsers from "../models/groupsUsersModel";
+import {Op} from "sequelize";
 
 const router = express.Router();
 
@@ -45,6 +46,38 @@ router.get(
     }
   },
 );
+
+router.get("/api/v1/groups/user/:id", async (req: Request, res: Response<GroupAttributes[] | ErrorType>) => {
+    const userId: string = req.params.id;
+    try {
+        const groupsUsers: GroupsUsers[] = await GroupsUsers.findAll({
+            where: {
+                user_id: userId
+            }
+        })
+
+        const groupIds: string[] = groupsUsers.map(group => group.dataValues.group_id);
+
+        const groups: GroupAttributes[] = await Group.findAll({
+            where: {
+                id: {
+                    [Op.in]: groupIds
+                }
+            }
+        });
+
+        if (!groups) {
+            return res.status(404).send("Groups not found");
+        }
+
+        return res.status(200).json(groups);
+    } catch (error) {
+        logger.error(error.stack);
+        logger.error(error.message);
+        logger.error(error.errors[0].message);
+        return res.status(500).json({ error: error.errors[0].message });
+    }
+});
 
 router.post(
   "/api/v1/groups",
