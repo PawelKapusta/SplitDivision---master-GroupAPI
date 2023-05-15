@@ -3,9 +3,10 @@ import { Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import Group from "../models/groupModel";
 import { logger } from "../utils/logger";
-import {GroupAttributes, ErrorType, UpdateGroupRequest, GroupPostPayload} from "../constants/constants";
+import {GroupAttributes, ErrorType, UpdateGroupRequest, GroupPostPayload, UserAttributes} from "../constants/constants";
 import GroupsUsers from "../models/groupsUsersModel";
 import {Op} from "sequelize";
+import User from "../models/userModel";
 
 const router = express.Router();
 
@@ -46,6 +47,40 @@ router.get(
     }
   },
 );
+
+router.get("/api/v1/groups/:id/users", async (req: Request, res: Response<UserAttributes[] | ErrorType>) => {
+    const groupId: string = req.params.id;
+
+    try {
+        const groupUsers: GroupsUsers[] = await GroupsUsers.findAll({
+            where: {
+                group_id: groupId
+            }
+        })
+
+        const usersIds: string[] = groupUsers.map(user => user.dataValues.user_id);
+
+        const users: UserAttributes[] = await User.findAll({
+            where: {
+                id: {
+                    [Op.in]: usersIds
+                }
+            }
+        });
+
+
+        if (!users) {
+            return res.status(404).send("Users not found");
+        }
+
+        return res.status(200).json(users);
+    } catch (error) {
+        logger.error(error.stack);
+        logger.error(error.message);
+        logger.error(error.errors[0].message);
+        return res.status(500).json({ error: error.errors[0].message });
+    }
+});
 
 router.get("/api/v1/groups/user/:id", async (req: Request, res: Response<GroupAttributes[] | ErrorType>) => {
     const userId: string = req.params.id;

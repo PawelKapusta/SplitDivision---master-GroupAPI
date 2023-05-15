@@ -34,6 +34,7 @@ app.get("/", (req, res) => {
 //groups
 app.get("/api/v1/groups", groupRouter);
 app.get("/api/v1/groups/:id", groupRouter);
+app.get("/api/v1/groups/:id/users", groupRouter);
 app.get("/api/v1/groups/user/:id", groupRouter);
 app.post("/api/v1/groups", groupRouter);
 app.put("/api/v1/groups/:id", groupRouter);
