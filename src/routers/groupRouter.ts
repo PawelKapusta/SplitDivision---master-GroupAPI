@@ -5,7 +5,7 @@ import Group from "../models/groupModel";
 import { logger } from "../utils/logger";
 import {GroupAttributes, ErrorType, UpdateGroupRequest, GroupPostPayload, UserAttributes} from "../constants/constants";
 import GroupsUsers from "../models/groupsUsersModel";
-import {Op} from "sequelize";
+import { Op } from "sequelize";
 import User from "../models/userModel";
 
 const router = express.Router();
