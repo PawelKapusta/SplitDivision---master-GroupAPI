@@ -31,7 +31,6 @@ app.get("/", (req, res) => {
   res.send("Hello World! from Group API");
 });
 
-//groups
 app.get("/api/v1/groups", groupRouter);
 app.get("/api/v1/groups/:id", groupRouter);
 app.get("/api/v1/groups/:id/users", groupRouter);
