@@ -1,9 +1,14 @@
-import express from "express";
-import { Request, Response } from "express";
+import express, { Request, Response } from "express";
 import { v4 as uuidv4 } from "uuid";
 import Group from "../models/groupModel";
 import { logger } from "../utils/logger";
-import {GroupAttributes, ErrorType, UpdateGroupRequest, GroupPostPayload, UserAttributes} from "../constants/constants";
+import {
+  ErrorType,
+  GroupAttributes,
+  GroupPostPayload,
+  UpdateGroupRequest,
+  UserAttributes,
+} from "../constants/constants";
 import GroupsUsers from "../models/groupsUsersModel";
 import { Op } from "sequelize";
 import User from "../models/userModel";
@@ -48,71 +53,76 @@ router.get(
   },
 );
 
-router.get("/api/v1/groups/:id/users", async (req: Request, res: Response<UserAttributes[] | ErrorType>) => {
+router.get(
+  "/api/v1/groups/:id/users",
+  async (req: Request, res: Response<UserAttributes[] | ErrorType>) => {
     const groupId: string = req.params.id;
 
     try {
-        const groupUsers: GroupsUsers[] = await GroupsUsers.findAll({
-            where: {
-                group_id: groupId
-            }
-        })
+      const groupUsers: GroupsUsers[] = await GroupsUsers.findAll({
+        where: {
+          group_id: groupId,
+        },
+      });
 
-        const usersIds: string[] = groupUsers.map(user => user.dataValues.user_id);
+      const usersIds: string[] = groupUsers.map(user => user.dataValues.user_id);
 
-        const users: UserAttributes[] = await User.findAll({
-            where: {
-                id: {
-                    [Op.in]: usersIds
-                }
-            }
-        });
+      const users: UserAttributes[] = await User.findAll({
+        where: {
+          id: {
+            [Op.in]: usersIds,
+          },
+        },
+      });
 
+      if (!users) {
+        return res.status(404).send("Users not found");
+      }
 
-        if (!users) {
-            return res.status(404).send("Users not found");
-        }
-
-        return res.status(200).json(users);
+      return res.status(200).json(users);
     } catch (error) {
-        logger.error(error.stack);
-        logger.error(error.message);
-        logger.error(error.errors[0].message);
-        return res.status(500).json({ error: error.errors[0].message });
+      logger.error(error.stack);
+      logger.error(error.message);
+      logger.error(error.errors[0].message);
+      return res.status(500).json({ error: error.errors[0].message });
     }
-});
+  },
+);
 
-router.get("/api/v1/groups/user/:id", async (req: Request, res: Response<GroupAttributes[] | ErrorType>) => {
+router.get(
+  "/api/v1/groups/user/:id",
+  async (req: Request, res: Response<GroupAttributes[] | ErrorType>) => {
     const userId: string = req.params.id;
     try {
-        const groupsUsers: GroupsUsers[] = await GroupsUsers.findAll({
-            where: {
-                user_id: userId
-            }
-        })
+      const groupsUsers: GroupsUsers[] = await GroupsUsers.findAll({
+        where: {
+          user_id: userId,
+        },
+      });
 
-        const groupIds: string[] = groupsUsers.map(group => group.dataValues.group_id);
+      const groupIds: string[] = groupsUsers.map(group => group.dataValues.group_id);
 
-        const groups: GroupAttributes[] = await Group.findAll({
-            where: {
-                id: {
-                    [Op.in]: groupIds
-                }
-            }
-        });
+      const groups: GroupAttributes[] = await Group.findAll({
+        where: {
+          id: {
+            [Op.in]: groupIds,
+          },
+        },
+      });
 
-        if (!groups) {
-            return res.status(404).send("Groups not found");
-        }
+      if (!groups) {
+        return res.status(404).send("Groups not found");
+      }
 
-        return res.status(200).json(groups);
+      return res.status(200).json(groups);
     } catch (error) {
-        logger.error(error.stack);
-        logger.error(error.message);
-        logger.error(error.errors[0].message);
-        return res.status(500).json({ error: error.errors[0].message });
+      logger.error(error.stack);
+      logger.error(error.message);
+      logger.error(error.errors[0].message);
+      return res.status(500).json({ error: error.errors[0].message });
     }
-});
+  },
+);
 
 router.post(
   "/api/v1/groups",
@@ -121,27 +131,26 @@ router.post(
 
     try {
       const id = uuidv4();
-      const newGroup:GroupAttributes = await Group.create({
+      const newGroup: GroupAttributes = await Group.create({
         id,
         name,
         description,
         data_created,
       });
 
-        for (const userId of usersIdList) {
-            console.log("Here adding groups users");
-            try {
-                await GroupsUsers.create({
-                    id: uuidv4(),
-                    group_id: id,
-                    user_id: userId
-                })
-                logger.info(`Successfully added user: ${userId} to group in database`);
-            } catch (error) {
-                logger.error(error.message);
-                return res.status(500).json({ error: error.message });
-            }
+      for (const userId of usersIdList) {
+        try {
+          await GroupsUsers.create({
+            id: uuidv4(),
+            group_id: id,
+            user_id: userId,
+          });
+          logger.info(`Successfully added user: ${userId} to group in database`);
+        } catch (error) {
+          logger.error(error.message);
+          return res.status(500).json({ error: error.message });
         }
+      }
 
       return res.status(201).json(newGroup);
     } catch (error) {

@@ -32,7 +32,7 @@ export interface GroupPostPayload {
   name: string;
   description: string;
   data_created: Date;
-  usersIdList: string[]
+  usersIdList: string[];
 }
 
 export interface UpdateGroupRequest {
